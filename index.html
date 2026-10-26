@@ -151,6 +151,33 @@ $("total").textContent=Object.keys(chats).length;openChat(name);save();
 }
 $("total").textContent=Object.keys(chats).length;
 render();
-</script>
+</script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkWhAgqApV1qaFRBHDYXzeZm8GbLQDy4",
+  authDomain: "nexchat-10f8d.firebaseapp.com",
+  projectId: "nexchat-10f8d",
+  storageBucket: "nexchat-10f8d.firebasestorage.app",
+  messagingSenderId: "354819679455",
+  appId: "1:354819679455:web:da96a884f439b3c528356a",
+  measurementId: "G-T92LJGYKFN"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, user => {
+  console.log(
+    user ? "NEXCHAT: usuário conectado!" : "NEXCHAT: ninguém conectado."
+  );
+});
 </body>
 </html>
