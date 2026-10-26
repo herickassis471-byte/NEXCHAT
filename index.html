@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101321">
+<title>NEXCHAT</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;background:radial-gradient(circle at top,#29245c,#0a0c16 60%);font-family:Arial,sans-serif;color:#f5f5ff}
+.app{width:100%;max-width:430px;background:#131729;border:1px solid #333957;border-radius:26px;overflow:hidden;box-shadow:0 20px 70px #0008}
+header{padding:22px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #292f49}
+.logo{width:45px;height:45px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,#855bff,#24ddcf);font-size:25px;font-weight:bold}
+h2{margin:0;letter-spacing:2px}header small{color:#aab1ce}
+main{padding:25px}
+.tag{color:#42e3d3;font-size:11px;letter-spacing:2px;font-weight:bold}
+h1{font-size:30px;line-height:1.1;margin:12px 0}
+p{color:#aab1c9;line-height:1.5;font-size:14px}
+label{display:block;font-size:12px;margin:17px 0 8px;color:#d7daf0}
+input,select{width:100%;padding:14px;border:1px solid #343b59;border-radius:12px;background:#0c1020;color:white;font-size:15px;outline:none}
+input:focus,select:focus{border-color:#9275ff}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(100deg,#855bff,#6559e8);color:white;font-weight:bold;font-size:14px;cursor:pointer;margin-top:16px}
+button.alt{background:#252b42;border:1px solid #373e5c}
+.note{padding:12px;background:#1b2035;border:1px solid #343b59;border-radius:12px;font-size:12px;color:#bfc6df;line-height:1.5;margin-top:18px}
+.status{font-size:12px;line-height:1.5;margin-top:12px;color:#ff9eaf}
+.hidden{display:none}
+footer{text-align:center;padding:15px;border-top:1px solid #292f49;color:#7f89a8;font-size:10px}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="logo">N</div><div><h2>NEXCHAT</h2><small>Conecte-se do seu jeito</small></div></header>
+<main>
+<section id="telefone">
+<div class="tag">PROJETO 2 • CADASTRO</div>
+<h1>Seu número.<br>Seu espaço.</h1>
+<p>Comece com seu telefone real. Depois, adicione um e-mail para recuperar sua conta.</p>
+<label for="pais">País</label>
+<select id="pais"><option value="+55">🇧🇷 Brasil (+55)</option><option value="+351">🇵🇹 Portugal (+351)</option></select>
+<label for="numero">Número de telefone com DDD</label>
+<input id="numero" type="tel" placeholder="(99) 99999-9999" autocomplete="tel">
+<button onclick="enviarSMS()">Continuar com SMS →</button>
+<div id="aviso" class="status"></div>
+<div class="note"><b>Proteção:</b> o código precisa ser enviado e validado por um serviço real de autenticação. Esta versão ainda não envia SMS.</div>
+</section>
+
+<section id="codigo" class="hidden">
+<div class="tag">VERIFICAÇÃO</div>
+<h1>Confirme seu número.</h1>
+<p>Quando conectarmos o serviço de SMS, você receberá um código temporário no seu telefone.</p>
+<label for="sms">Código recebido por SMS</label>
+<input id="sms" inputmode="numeric" maxlength="6" placeholder="Digite os 6 números">
+<button onclick="verificarSMS()">Verificar código →</button>
+<div id="avisoCodigo" class="status"></div>
+<button class="alt" onclick="tela('telefone')">Voltar</button>
+</section>
+
+<section id="email" class="hidden">
+<div class="tag">PROTEJA SUA CONTA</div>
+<h1>Adicione seu e-mail.</h1>
+<p>Use um e-mail seu para facilitar a recuperação do acesso.</p>
+<label for="correio">E-mail</label>
+<input id="correio" type="email" placeholder="voce@exemplo.com" autocomplete="email">
+<label for="senha">Senha (mínimo 8 caracteres)</label>
+<input id="senha" type="password" minlength="8" placeholder="Crie uma senha">
+<label for="pin">PIN adicional de 6 números</label>
+<input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••">
+<button onclick="criarConta()">Preparar minha conta →</button>
+<div id="avisoEmail" class="status"></div>
+<div class="note">A confirmação do e-mail e a criação segura da conta também precisam de um serviço conectado.</div>
+</section>
+
+<section id="fim" class="hidden">
+<div class="tag">NEXCHAT</div>
+<h1>Quase lá! 🚀</h1>
+<p>A interface inicial está pronta. A próxima etapa é conectar o sistema de autenticação real.</p>
+<div class="note">O SMS, o e-mail de confirmação e o armazenamento seguro ainda precisam ser configurados.</div>
+<button onclick="tela('telefone')">Voltar ao início</button>
+</section>
+</main>
+<footer>NEXCHAT • PROTÓTIPO INICIAL<br>Não use como sistema de autenticação real ainda.</footer>
+</div>
+<script>
+function tela(id){
+["telefone","codigo","email","fim"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+}
+function enviarSMS(){
+let n=document.getElementById("numero").value.replace(/\D/g,"");
+if(n.length<10||n.length>11){
+document.getElementById("aviso").textContent="Digite um número com DDD válido.";
+return;
+}
+document.getElementById("aviso").textContent="O serviço de SMS real ainda não foi conectado. Nenhuma mensagem foi enviada.";
+}
+function verificarSMS(){
+document.getElementById("avisoCodigo").textContent="Não é possível validar o código ainda. Precisamos conectar um serviço de autenticação real.";
+}
+function criarConta(){
+let e=document.getElementById("correio").value;
+let s=document.getElementById("senha").value;
+let p=document.getElementById("pin").value;
+if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){
+document.getElementById("avisoEmail").textContent="Digite um e-mail válido.";
+return;
+}
+if(s.length<8){
+document.getElementById("avisoEmail").textContent="A senha precisa ter pelo menos 8 caracteres.";
+return;
+}
+if(!/^\d{6}$/.test(p)){
+document.getElementById("avisoEmail").textContent="O PIN deve ter exatamente 6 números.";
+return;
+}
+tela("fim");
+}
+</script>
+</body>
+</html>
