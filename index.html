@@ -11,6 +11,7 @@
 body{margin:0;background:#0a0d17;color:#f4f5ff;font-family:Arial,sans-serif}
 button,input{font:inherit}
 button{cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
 .app{max-width:1100px;margin:auto;min-height:100vh;background:#111526}
 header{height:75px;display:flex;align-items:center;padding:0 22px;gap:12px;border-bottom:1px solid #292f45}
 .logo{width:43px;height:43px;border-radius:14px;background:linear-gradient(135deg,#865bff,#23d9cb);display:grid;place-items:center;font-size:23px;font-weight:bold}
@@ -21,7 +22,6 @@ header{height:75px;display:flex;align-items:center;padding:0 22px;gap:12px;borde
 .sidebar{border-right:1px solid #292f45;padding:18px}
 h2{font-size:19px;margin:6px 0 17px}
 .search{width:100%;padding:13px;border:1px solid #303751;border-radius:13px;background:#0b1020;color:white;outline:none;margin-bottom:15px}
-.search:focus{border-color:#8b70ff}
 .person{display:flex;align-items:center;gap:12px;padding:13px 10px;border-radius:14px;cursor:pointer}
 .person:hover,.person.active{background:#242a43}
 .avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#7355dc,#21b7b0);font-size:19px;font-weight:bold;flex-shrink:0}
@@ -38,21 +38,25 @@ h2{font-size:19px;margin:6px 0 17px}
 .sent{align-self:flex-end;background:linear-gradient(135deg,#7655e9,#5848b9);border-bottom-right-radius:4px}
 .btime{font-size:10px;text-align:right;color:#c3c4e6;margin-top:6px}
 .composer{display:flex;gap:9px;padding:15px;border-top:1px solid #292f45}
-.composer input{flex:1;min-width:0;background:#0b1020;border:1px solid #303751;border-radius:13px;padding:13px;color:white;outline:none}
+.composer input,.authbox input{width:100%;min-width:0;background:#0b1020;border:1px solid #303751;border-radius:13px;padding:13px;color:white;outline:none;margin:5px 0 12px}
 .send{width:48px;border:0;border-radius:13px;background:#7b5cff;color:white;font-size:21px}
-.empty{margin:auto;text-align:center;color:#a5aec9;padding:30px}
-.empty .big{font-size:48px;margin-bottom:12px}
 .tools{display:flex;gap:8px;margin-top:15px}
 .tool{flex:1;background:#20263b;border:1px solid #343b57;border-radius:11px;padding:10px;color:#d9ddf4;font-size:12px}
 .notice{text-align:center;color:#7f89a8;font-size:11px;padding:12px}
+.authscreen{min-height:calc(100vh - 75px);display:grid;place-items:center;padding:24px}
+.authbox{width:min(100%,390px);padding:28px;background:#171d31;border:1px solid #303751;border-radius:22px;box-shadow:0 20px 70px #0005}
+.authbox h1{font-size:25px;margin:0 0 8px}
+.authbox p{color:#a5aec9;font-size:13px;line-height:1.5}
+.primary{width:100%;border:0;border-radius:12px;background:linear-gradient(135deg,#865bff,#5848b9);color:white;padding:13px;margin-top:5px;font-weight:bold}
+.switch{display:block;text-align:center;color:#c7baff;margin-top:17px;background:none;border:0;width:100%;font-size:13px}
+.status{font-size:13px;line-height:1.5;color:#7fe8d4;overflow-wrap:anywhere;margin:10px 0}
+#chatApp[hidden],#authScreen[hidden]{display:none!important}
 @media(max-width:650px){
 .layout{grid-template-columns:1fr}
 .sidebar{border-right:0;padding:14px}
-.sidebar h2{margin-bottom:12px}
 .people{display:flex;overflow-x:auto;gap:5px}
 .person{flex-direction:column;text-align:center;min-width:83px;padding:10px 5px;gap:7px}
 .person .info{width:100%}.person .preview,.person .time{display:none}
-.avatar{width:47px;height:47px}
 .chat{border-top:1px solid #303751;min-height:60vh}
 .chatbody{min-height:280px;padding:16px}
 .chathead{padding:13px 17px}
@@ -64,125 +68,212 @@ h2{font-size:19px;margin:6px 0 17px}
 <header>
 <div class="logo">N</div>
 <div><div class="brand">NEXCHAT</div><div class="sub">SUA CONEXÃO, SEM LIMITES</div></div>
-<div class="online">● Protótipo</div>
+<div class="online" id="topStatus">● Conectando</div>
 </header>
+
+<section class="authscreen" id="authScreen">
+<div class="authbox">
+<div class="logo">N</div>
+<h1 id="authTitle">Entre no NEXCHAT</h1>
+<p id="authDescription">Entre com seu e-mail e senha para acessar sua conta.</p>
+<form id="authForm">
+<label for="email">E-mail</label>
+<input id="email" type="email" placeholder="voce@exemplo.com" required autocomplete="email">
+<label for="password">Senha</label>
+<input id="password" type="password" placeholder="Mínimo de 6 caracteres" minlength="6" required autocomplete="current-password">
+<button class="primary" id="authSubmit" type="submit">Entrar</button>
+</form>
+<button class="switch" id="switchAuth" type="button">Não tem conta? Criar conta</button>
+<div class="status" id="authStatus" role="status"></div>
+</div>
+</section>
+
+<div id="chatApp" hidden>
 <div class="layout">
 <aside class="sidebar">
 <h2>Conversas <span id="total" style="color:#8e79ff">3</span></h2>
-<input id="search" class="search" placeholder="⌕  Pesquisar conversas..." oninput="searchPeople()">
+<input id="search" class="search" placeholder="⌕ Pesquisar conversas...">
 <div class="people" id="people">
-<div class="person active" data-name="Luna" onclick="openChat('Luna')">
+<div class="person active" data-name="Luna">
 <div class="avatar">L</div><div class="info"><div class="name">Luna</div><div class="preview">Oi! Tudo bem? ✨</div></div><div class="time">Agora</div>
 </div>
-<div class="person" data-name="Lucas" onclick="openChat('Lucas')">
+<div class="person" data-name="Lucas">
 <div class="avatar" style="background:linear-gradient(135deg,#ef8c56,#bd4f9e)">L</div><div class="info"><div class="name">Lucas</div><div class="preview">Bora jogar mais tarde?</div></div><div class="time">14:32</div>
 </div>
-<div class="person" data-name="Sofia" onclick="openChat('Sofia')">
+<div class="person" data-name="Sofia">
 <div class="avatar" style="background:linear-gradient(135deg,#e65caa,#7956d9)">S</div><div class="info"><div class="name">Sofia</div><div class="preview">Obrigada!! 💜</div></div><div class="time">Ontem</div>
 </div>
 </div>
 <div class="tools">
-<button class="tool" onclick="newChat()">＋ Nova conversa</button>
-<button class="tool" onclick="alert('As configurações completas serão adicionadas nas próximas etapas.')">⚙ Ajustes</button>
+<button class="tool" id="newChat" type="button">＋ Nova conversa</button>
+<button class="tool" id="logout" type="button">↪ Sair</button>
 </div>
-<div class="notice">Suas conversas de demonstração ficam neste navegador.</div>
+<div class="notice">Conversas de demonstração neste navegador. Ainda não são mensagens entre usuários.</div>
 </aside>
 <section class="chat">
 <div class="chathead">
 <div class="avatar" id="chatavatar">L</div>
-<div><div class="name" id="chatname">Luna</div><div class="sub" id="chatstatus">Conversa de demonstração</div></div>
+<div><div class="name" id="chatname">Luna</div><div class="sub">Conversa de demonstração</div></div>
 </div>
 <div class="chatbody" id="messages"></div>
-<form class="composer" id="form">
+<form class="composer" id="messageForm">
 <input id="message" placeholder="Escreva uma mensagem..." maxlength="1000" autocomplete="off">
 <button class="send" aria-label="Enviar">➤</button>
 </form>
 </section>
 </div>
 </div>
-<script>
-const initial={
-Luna:[{text:"Oi! Tudo bem? ✨",sent:false,time:"19:01"},{text:"Bem-vindo ao NEXCHAT! Estamos começando 🚀",sent:false,time:"19:02"}],
-Lucas:[{text:"Bora jogar mais tarde?",sent:false,time:"14:32"}],
-Sofia:[{text:"Obrigada!! 💜",sent:false,time:"Ontem"}]
-};
-let chats=JSON.parse(JSON.stringify(initial));
-let current="Luna";
-const $=id=>document.getElementById(id);
-function clock(){return new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
-function safe(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function render(){
-$("messages").innerHTML="";
-(chats[current]||[]).forEach(m=>{
-let b=document.createElement("div");
-b.className="bubble "+(m.sent?"sent":"received");
-b.innerHTML=safe(m.text)+"<div class='btime'>"+safe(m.time)+"</div>";
-$("messages").appendChild(b);
-});
-$("messages").scrollTop=$("messages").scrollHeight;
-$("chatname").textContent=current;
-$("chatavatar").textContent=current[0].toUpperCase();
-$("chatstatus").textContent="Conversa de demonstração";
-document.querySelectorAll(".person").forEach(p=>p.classList.toggle("active",p.dataset.name===current));
-}
-function openChat(name){current=name;if(!chats[name])chats[name]=[];render()}
-function searchPeople(){
-let q=$("search").value.toLowerCase();
-document.querySelectorAll(".person").forEach(p=>p.style.display=p.dataset.name.toLowerCase().includes(q)?"flex":"none");
-}
-$("form").addEventListener("submit",e=>{
-e.preventDefault();let text=$("message").value.trim();if(!text)return;
-chats[current].push({text,sent:true,time:clock()});
-$("message").value="";render();save();
-});
-function save(){try{localStorage.setItem("nexchat-demo",JSON.stringify(chats))}catch(e){}}
-try{let stored=localStorage.getItem("nexchat-demo");if(stored)chats=JSON.parse(stored)}catch(e){}
-function newChat(){
-let name=prompt("Nome do contato para criar uma conversa:");
-if(!name)return;name=name.trim().slice(0,30);
-if(!name)return;
-if(!chats[name])chats[name]=[];
-if(!document.querySelector('[data-name="'+CSS.escape(name)+'"]')){
-let p=document.createElement("div");p.className="person";p.dataset.name=name;
-p.innerHTML='<div class="avatar">'+safe(name[0].toUpperCase())+'</div><div class="info"><div class="name">'+safe(name)+'</div><div class="preview">Nova conversa</div></div><div class="time">Agora</div>';
-p.onclick=()=>openChat(name);$("people").appendChild(p);
-}
-$("total").textContent=Object.keys(chats).length;openChat(name);save();
-}
-$("total").textContent=Object.keys(chats).length;
-render();
-</script><script type="module">
+</div>
+
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
+ getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+ signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBkWhAgqApV1qaFRBHDYXzeZm8GbLQDy4",
-  authDomain: "nexchat-10f8d.firebaseapp.com",
-  projectId: "nexchat-10f8d",
-  storageBucket: "nexchat-10f8d.firebasestorage.app",
-  messagingSenderId: "354819679455",
-  appId: "1:354819679455:web:da96a884f439b3c528356a",
-  measurementId: "G-T92LJGYKFN"
+ apiKey: "AIzaSyBkWhAgqApV1qaFRBHDYXzeZm8GbLQDy4",
+ authDomain: "nexchat-10f8d.firebaseapp.com",
+ projectId: "nexchat-10f8d",
+ storageBucket: "nexchat-10f8d.firebasestorage.app",
+ messagingSenderId: "354819679455",
+ appId: "1:354819679455:web:da96a884f439b3c528356a",
+ measurementId: "G-T92LJGYKFN"
 };
 
+const $ = id => document.getElementById(id);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+let isRegister = false;
+let chats = {
+ Luna:[{text:"Oi! Tudo bem? ✨",sent:false,time:"19:01"},{text:"Bem-vindo ao NEXCHAT! 🚀",sent:false,time:"19:02"}],
+ Lucas:[{text:"Bora jogar mais tarde?",sent:false,time:"14:32"}],
+ Sofia:[{text:"Obrigada!! 💜",sent:false,time:"Ontem"}]
+};
+let current = "Luna";
 
-onAuthStateChanged(auth, user => {
-  console.log(
-    user ? "NEXCHAT: usuário conectado!" : "NEXCHAT: ninguém conectado."
-  );
+function safe(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function clock(){
+ return new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+function render(){
+ $("messages").replaceChildren();
+ (chats[current]||[]).forEach(m=>{
+  const b=document.createElement("div");
+  b.className="bubble "+(m.sent?"sent":"received");
+  b.innerHTML=safe(m.text)+"<div class='btime'>"+safe(m.time)+"</div>";
+  $("messages").appendChild(b);
+ });
+ $("messages").scrollTop=$("messages").scrollHeight;
+ $("chatname").textContent=current;
+ $("chatavatar").textContent=current[0].toUpperCase();
+ document.querySelectorAll(".person").forEach(p=>p.classList.toggle("active",p.dataset.name===current));
+}
+function save(){
+ try{localStorage.setItem("nexchat-demo",JSON.stringify(chats));}catch(e){}
+}
+function openChat(name){
+ current=name;
+ if(!chats[name])chats[name]=[];
+ render();
+}
+function addPerson(name){
+ const p=document.createElement("div");
+ p.className="person";
+ p.dataset.name=name;
+ p.innerHTML='<div class="avatar">'+safe(name[0].toUpperCase())+'</div><div class="info"><div class="name">'+safe(name)+'</div><div class="preview">Nova conversa</div></div><div class="time">Agora</div>';
+ p.addEventListener("click",()=>openChat(name));
+ $("people").appendChild(p);
+}
+function searchPeople(){
+ const q=$("search").value.toLowerCase();
+ document.querySelectorAll(".person").forEach(p=>{
+  p.style.display=p.dataset.name.toLowerCase().includes(q)?"flex":"none";
+ });
+}
+document.querySelectorAll(".person").forEach(p=>{
+ p.addEventListener("click",()=>openChat(p.dataset.name));
 });
-
-  console.log(
-    user ? "NEXCHAT: usuário conectado!" : "NEXCHAT: ninguém conectado."
-  );
+$("search").addEventListener("input",searchPeople);
+$("messageForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const text=$("message").value.trim();
+ if(!text)return;
+ chats[current].push({text,sent:true,time:clock()});
+ $("message").value="";
+ render();
+ save();
+});
+$("newChat").addEventListener("click",()=>{
+ const value=prompt("Nome do contato:");
+ if(!value)return;
+ const name=value.trim().slice(0,30);
+ if(!name)return;
+ if(!chats[name]){
+  chats[name]=[];
+  addPerson(name);
+ }
+ $("total").textContent=Object.keys(chats).length;
+ openChat(name);
+ save();
+});
+try{
+ const stored=localStorage.getItem("nexchat-demo");
+ if(stored)chats=JSON.parse(stored);
+}catch(e){}
+$("switchAuth").addEventListener("click",()=>{
+ isRegister=!isRegister;
+ $("authTitle").textContent=isRegister?"Criar sua conta":"Entre no NEXCHAT";
+ $("authDescription").textContent=isRegister?"Use um e-mail válido e crie uma senha com pelo menos 6 caracteres.":"Entre com seu e-mail e senha para acessar sua conta.";
+ $("authSubmit").textContent=isRegister?"Criar conta":"Entrar";
+ $("switchAuth").textContent=isRegister?"Já tem conta? Entrar":"Não tem conta? Criar conta";
+ $("password").autocomplete=isRegister?"new-password":"current-password";
+ $("authStatus").textContent="";
+});
+$("authForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const email=$("email").value.trim();
+ const password=$("password").value;
+ $("authSubmit").disabled=true;
+ $("authStatus").textContent="Aguarde...";
+ try{
+  if(isRegister){
+   await createUserWithEmailAndPassword(auth,email,password);
+  }else{
+   await signInWithEmailAndPassword(auth,email,password);
+  }
+ }catch(error){
+  const messages={
+   "auth/email-already-in-use":"Este e-mail já tem conta. Entre em vez de cadastrar.",
+   "auth/invalid-email":"Confira o formato do e-mail.",
+   "auth/weak-password":"A senha precisa ter pelo menos 6 caracteres.",
+   "auth/invalid-credential":"E-mail ou senha incorretos.",
+   "auth/too-many-requests":"Muitas tentativas. Aguarde um pouco e tente novamente.",
+   "auth/network-request-failed":"Falha de conexão. Confira sua internet."
+  };
+  $("authStatus").textContent=messages[error.code]||"Não foi possível concluir. Código: "+error.code;
+ }finally{
+  $("authSubmit").disabled=false;
+ }
+});
+$("logout").addEventListener("click",async()=>{
+ try{await signOut(auth);}catch(e){$("topStatus").textContent="Erro ao sair";}
+});
+onAuthStateChanged(auth,user=>{
+ if(user){
+  $("authScreen").hidden=true;
+  $("chatApp").hidden=false;
+  $("topStatus").textContent="● Conta conectada";
+  $("total").textContent=Object.keys(chats).length;
+  render();
+ }else{
+  $("authScreen").hidden=false;
+  $("chatApp").hidden=true;
+  $("topStatus").textContent="● Desconectado";
+ }
 });
 </script>
 </body>
